@@ -33,54 +33,67 @@ class  Node{
         Board currentboard;
         Node *nextNode[30];
         Node *preNode;
+        Player* player ; 
         int index[2];   
-        int score ; 
-        int level ; 
+ 
     public:
-        Node(Board , Player* , int  , int  ,int);
-        Node(Board board) ;
-        void setnextNode(Node* node);
-        int countscore(Node* , Player*) ; 
-        void chooseindex(Node*);
-        Node* getNextNode();
+        Node(Board  , int  , int, Player*);
+        Node(Board , Player*) ;
+        int setnextNode(Node* ,Player*);
+        Node* setoppoNode(Node* , Player*) ;
+        int countscore() ; 
+        void chooseindex(Node* , Player* , int*);
+        Node* getNextNode(int i)
+        {
+            return nextNode[i];
+        }
         Board getboard()
         {
             return currentboard ; 
         }
+        Player* getplayer()
+        {
+            return player ;
+        } 
+        int* getindex()
+        {
+             return index;
+        }
       
 };
-Node::Node(Board board,Player* player , int i , int j , int level )
+
+Node::Node(Board board , int i , int j , Player* play )
 {
      currentboard = board ; 
      index[0] = i ; 
      index[0] = j ; 
-     this->level = level ; 
+     player  = play ; 
      
      for(int i=0 ; i<30 ; i++)
        nextNode[i] = NULL ;  
-
      
 }
-Node::Node(Board board)
+
+Node::Node(Board board , Player *play)
 {
      currentboard = board ; 
-     
+     player  = play ;  
      for(int i=0 ; i<30 ; i++)
        nextNode[i] = NULL ;  
 
 }
 
-int Node::countscore(Node* node, Player* play)
+int Node::countscore()
 {
      int score = 0 ;
-     char player = play->get_color() ; 
-     Board board = node->getboard() ; 
+     char color = player->get_color() ; 
+     Board board = this->getboard() ; 
 
      for(int i=0 ; i<row ; i++)
      {
          for(int j=0 ; j<col ; j++)
          {
-             if(board.get_cell_color(i, j)==player)
+             if(board.get_cell_color(i, j)==color)
              score+=board.get_orbs_num( i, j) ; 
          }
      }
@@ -88,38 +101,85 @@ int Node::countscore(Node* node, Player* play)
 
 } 
 
-void Node::chooseindex(Node* , Player*)
+void Node::chooseindex(Node* now , Player*, int * index)
 {
     int highscore =  0 ;
-    for(int k=0 ; k<4 ; k++)
-    {
-       for(int i =0 ; i<row ; i++)
-       {
-           for(int j=0 ; j<col ; j++)
-           {
-            if()
-           }
-       }
-    }
+    int tempscore;  
+    int nodenumber = 0 ; 
+    int  oppcolor ='w' ;
+    nodenumber= setnextNode(this ,player) ; 
+    Node* resultnode ; 
+    char color = player->get_color() ;
 
+    if(color=='r')oppcolor ='b' ; 
+    else   oppcolor ='r' ; 
+
+    Player *opponent =  new Player(oppcolor) ; 
+
+    for(int i=0  ; i<nodenumber  ; i++)
+    {
+        Node* temp  = (now->getNextNode(i))->setoppoNode( nextNode[i] , opponent);
+        tempscore = temp->countscore();
+        if(tempscore>highscore)
+        {
+            highscore = tempscore ; 
+        }
+         resultnode =now->getNextNode(i) ; 
+
+    }
+    index[0] = resultnode->getindex()[0];
+    index[1] = resultnode->getindex()[1];
+    
 
 }
 
-void algorithm_A(Board board, Player player, int index[]){
-    Node *head = new Node(board) ; 
-     
-    chooseindex(head); 
-
-    srand(time(NULL));
-    int row, col;
-    int color = player.get_color();
-    
-    while(1){
-        row = rand() % 5;
-        col = rand() % 6;
-        if(board.get_cell_color(row, col) == color || board.get_cell_color(row, col) == 'w') break;
+int Node::setnextNode(Node* now , Player* play)
+{
+    int index = 0 ; 
+   
+    for(int i=0  ; i<row ; i++)
+    {
+        for(int j=0 ; j<col ; j++)
+        {
+             Board newboard  = now->getboard() ;
+             if(newboard.place_orb(i , j , play))
+             {
+                 Node* newnode = new Node(newboard, i , j , play);
+                 now->nextNode[index++] = newnode ;
+             }
+             
+        }
     }
+    return index ; 
 
-    index[0] = row;
-    index[1] = col;
+}
+Node* Node::setoppoNode(Node* now , Player* oppo)
+{
+
+        int score = 0 ; 
+        Node *bestnode = NULL ; 
+   
+    for(int i=0  ; i<row ; i++)
+    {
+        for(int j=0 ; j<col ; j++)
+        {
+             Board newboard  = now->getboard() ;
+             if(newboard.place_orb(i , j , oppo))
+             {
+                 Node* newnode = new Node(newboard, i , j , oppo);
+                 if(newnode->countscore()>score )
+                 bestnode =newnode ; 
+             }
+             
+        }
+    }
+    return bestnode ; 
+
+}
+void algorithm_A(Board board, Player player, int index[]){
+    Node *head = new Node(board, &player) ; 
+     
+    head->chooseindex(head , &player,  index); 
+
+
 }
