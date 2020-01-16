@@ -3,10 +3,15 @@
 #include <time.h>
 #include "../include/algorithm.h"
 #include "../include/rules.h"
+#include <iostream>
+
+
+using namespace std;
 
 #define row 5  
 #define col 6 
 using namespace std;
+
 
 /******************************************************
  * In your algorithm, you can just use the the funcitons
@@ -41,7 +46,7 @@ class  Node{
         Node(Board , Player*) ;
         int setnextNode(Node* ,Player*);
         Node* setoppoNode(Node* , Player*) ;
-        int countscore() ; 
+        int countscore(Node* , Player*) ; 
         void chooseindex(Node* , Player* , int*);
         Node* getNextNode(int i)
         {
@@ -66,7 +71,7 @@ Node::Node(Board board , int i , int j , Player* play )
 {
      currentboard = board ; 
      index[0] = i ; 
-     index[0] = j ; 
+     index[1] = j ; 
      player  = play ; 
      
      for(int i=0 ; i<30 ; i++)
@@ -83,11 +88,11 @@ Node::Node(Board board , Player *play)
 
 }
 
-int Node::countscore()
+int Node::countscore(Node*now , Player* player)
 {
      int score = 0 ;
      char color = player->get_color() ; 
-     Board board = this->getboard() ; 
+     Board board = now->getboard() ; 
 
      for(int i=0 ; i<row ; i++)
      {
@@ -101,32 +106,46 @@ int Node::countscore()
 
 } 
 
-void Node::chooseindex(Node* now , Player*, int * index)
+void Node::chooseindex(Node* now , Player*player, int * index )
 {
     int highscore =  0 ;
     int tempscore;  
-    int nodenumber = 0 ; 
-    int  oppcolor ='w' ;
-    nodenumber= setnextNode(this ,player) ; 
+    int fristnodenumber = 0 ; 
+    int secondnodenumber = 0 ; 
+    int thirdnodenumber = 0 ; 
+    int forthnodenumber = 0 ; 
+    int  oppcolor ='w' ; 
     Node* resultnode ; 
     char color = player->get_color() ;
+    if(color == 'r')
+    oppcolor = 'b';
+    else oppcolor = 'r';
+    Player *opponent =  new Player(oppcolor) ;
 
-    if(color=='r')oppcolor ='b' ; 
-    else   oppcolor ='r' ; 
-
-    Player *opponent =  new Player(oppcolor) ; 
-
+    int nodenumber= setnextNode(this ,player) ; 
     for(int i=0  ; i<nodenumber  ; i++)
     {
         Node* temp  = (now->getNextNode(i))->setoppoNode( nextNode[i] , opponent);
-        tempscore = temp->countscore();
-        if(tempscore>highscore)
+        secondnodenumber =temp->setnextNode(temp  , player);
+        for(int j=0 ; j<secondnodenumber;j++)
         {
-            highscore = tempscore ; 
+             Node* temp2  = (temp->getNextNode(j))->setoppoNode(temp->getNextNode(j) , opponent);
+             thirdnodenumber = temp2->setnextNode(temp2  , player);
+             for(int k=0 ; k<thirdnodenumber ; k++)
+             {
+                int tempscore = temp2->getNextNode(k)->countscore(temp2->getNextNode(k),player);
+                if(highscore<tempscore)
+               {
+                   resultnode = now->getNextNode(i) ;  
+                   highscore = tempscore ;
+
+               }
+             }
+      
         }
-         resultnode =now->getNextNode(i) ; 
 
     }
+    
     index[0] = resultnode->getindex()[0];
     index[1] = resultnode->getindex()[1];
     
@@ -136,7 +155,8 @@ void Node::chooseindex(Node* now , Player*, int * index)
 int Node::setnextNode(Node* now , Player* play)
 {
     int index = 0 ; 
-   
+    Player* temp =play ; 
+    
     for(int i=0  ; i<row ; i++)
     {
         for(int j=0 ; j<col ; j++)
@@ -146,7 +166,9 @@ int Node::setnextNode(Node* now , Player* play)
              {
                  Node* newnode = new Node(newboard, i , j , play);
                  now->nextNode[index++] = newnode ;
+                 
              }
+             else  play = temp ; 
              
         }
     }
@@ -158,6 +180,7 @@ Node* Node::setoppoNode(Node* now , Player* oppo)
 
         int score = 0 ; 
         Node *bestnode = NULL ; 
+        Player* temp = oppo ; 
    
     for(int i=0  ; i<row ; i++)
     {
@@ -167,9 +190,10 @@ Node* Node::setoppoNode(Node* now , Player* oppo)
              if(newboard.place_orb(i , j , oppo))
              {
                  Node* newnode = new Node(newboard, i , j , oppo);
-                 if(newnode->countscore()>score )
+                 if(newnode->countscore(newnode,oppo)>score )
                  bestnode =newnode ; 
              }
+             else oppo=temp ; 
              
         }
     }
@@ -177,8 +201,8 @@ Node* Node::setoppoNode(Node* now , Player* oppo)
 
 }
 void algorithm_A(Board board, Player player, int index[]){
-    Node *head = new Node(board, &player) ; 
-     
+
+    Node *head = new Node(board, &player) ;     
     head->chooseindex(head , &player,  index); 
 
 

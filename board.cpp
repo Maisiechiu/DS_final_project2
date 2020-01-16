@@ -1,11 +1,10 @@
 #include <iostream>
-#include <string.h>
-#include <stdio.h>
- #include <cstdlib>
 #include "../include/board.h"
 #include "../include/rules.h"
-
+#include <fstream>
+#include <stdlib.h>
 using namespace std;
+ofstream file2("final.path") ; 
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
     #define CLEAR "CLS"
@@ -72,9 +71,9 @@ void Board::print_current_board(int i, int j, int round){
 
     ////// Print out the current state of the board //////
     system(CLEAR);
-    cout << "Round: " << round << endl;
-    cout << "Place orb on (" << i << ", " << j << ")" << endl;
-    cout << "=========================================" << endl;
+    file2 << "Round: " << round << endl;
+    file2 << "Place orb on (" << i << ", " << j << ")" << endl;
+    file2 << "=========================================" << endl;
     for(int i = 0; i < ROW; i++){
         for(int j = 0; j < COL; j++){
 
@@ -93,29 +92,29 @@ void Board::print_current_board(int i, int j, int round){
             orb_num = cells[i][j].get_orbs_num();
             switch(orb_num){
                 case 0:
-                    cout << "|    | ";
+                    file2 << "|    | ";
                     break;
                 case 1:
-                    cout << "|" << symbol << "   | ";
+                    file2 << "|" << symbol << "   | ";
                     break;
                 case 2: 
-                    cout << "|" << symbol << symbol << "  | ";
+                    file2 << "|" << symbol << symbol << "  | ";
                     break;
                 case 3:
-                    cout << "|" << symbol << symbol << symbol << " | ";
+                    file2 << "|" << symbol << symbol << symbol << " | ";
                     break;
                 default:
-                    cout << "|" << symbol << symbol << symbol << symbol << "| ";
+                    file2 << "|" << symbol << symbol << symbol << symbol << "| ";
             }
         }
-        cout << endl;
+        file2 << endl;
     }
-    cout << "=========================================" << endl << endl;
+    file2 << "=========================================" << endl << endl;
 }
 
 bool Board::place_orb(int i, int j, Player * player){
     
-    if(index_range_illegal(i, j) || !placement_illegal(*player, cells[i][j])){
+    if(!index_range_illegal(i, j) && !placement_illegal(*player, cells[i][j])){
         int temp = cells[i][j].get_orbs_num();
         temp += 1;
         cells[i][j].set_orbs_num(temp);
